@@ -1,0 +1,5 @@
+id,language,model,bleu_score,rouge_l,bert_sim,has_hallucination,error_type,root_cause,input_code_snippet,output_doc
+cob_01,COBOL,gpt-3.5-turbo,0.02983272055925956,0.3157894736842105,0.9234811663627625,False,None,The documentation correctly explains what the code does.,"       IDENTIFICATION DIVISION.
+       PROGRAM-ID....","This COBOL program identifies itself as ""HELLO"" and displays the message ""HELLO WORLD"" on the output. Finally, it stops the execution of the program."
+cob_02,COBOL,gpt-3.5-turbo,0.07746741482791356,0.3943661971830986,0.9198627471923828,False,None,The documentation accurately reflects what the code does.,"       IDENTIFICATION DIVISION.
+       PROGRAM-ID....",This COBOL program calculates the sum of two numbers (NUM1 and NUM2) and displays the result. The numbers 10 and 20 are initially assigned to NUM1 and NUM2 respectively. The sum is stored in the TOTAL variable and displayed to the user as 'SUM IS: <total>'. The program then stops execution.
