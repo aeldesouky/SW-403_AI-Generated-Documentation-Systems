@@ -1,25 +1,49 @@
+
 # AI-Generated Documentation Systems: Evaluation and Mitigation Strategies
 
 [![Course](https://img.shields.io/badge/Course-SW%20403%3A%20AI%20in%20Modern%20Software-blue)](https://)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-yellow)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red)](https://streamlit.io/)
 
-This repository contains the research and development for the "AI in Modern Software" (SW 403) course project, focusing on the challenges and opportunities of AI-generated documentation in critical domains like software engineering and healthcare.
+This repository contains the research and development for the "AI in Modern Software" (SW 403) course project. It implements an automated documentation system focusing on the "Legacy Code Crisis," comparing LLM performance on modern (Python) vs. legacy (COBOL) systems.
 
 ## 1. Project Description
 
-The proliferation of Large Language Models (LLMs) presents a significant opportunity to automate the costly and time-consuming process of documentation in both software engineering (especially for legacy systems) and healthcare (clinical notes). However, this automation is fraught with risks, including factual inaccuracies, hallucinations, and omissions, which can have severe consequences in these safety-critical fields.
+The proliferation of Large Language Models (LLMs) presents a significant opportunity to automate documentation. However, this automation is fraught with risks, including factual inaccuracies and hallucinations.
 
-This project investigates the current state of AI-generated documentation, aiming to develop and evaluate a prototype system. The core of the project is to analyze failure modes (like hallucinations) and propose frameworks for evaluating documentation quality, balancing the need for efficiency with the demand for reliability and trustworthiness.
+**Phase 2 Focus:** We have developed a "Code Documenter" prototype that:
+1.  **Generates** documentation for Code and Legacy systems using configurable LLMs (OpenAI & Bytez).
+2.  **Evaluates** output using semantic metrics (BERTScore) and lexical metrics (BLEU/ROUGE).
+3.  **Audits** reliability using an "LLM-as-a-Judge" framework to automatically detect hallucinations and omission errors.
 
-## 2. Motivation
+## 2. Repository Structure
 
-* **Software Engineering:** Code documentation is vital for maintenance and knowledge transfer, yet it's often neglected. In legacy systems (e.g., COBOL, MUMPS), where original developers are unavailable, documentation is critical. LLMs struggle with these less-common languages and complex code, often producing incomplete or "hallucinated" explanations.
-* **Healthcare:** Clinicians spend 34-55% of their time on documentation, leading to burnout and massive opportunity costs. While AI can significantly reduce this burden, an error or omission in a clinical note could directly compromise patient safety.
+```text
+ai-doc-generator/
+├── data/
+│   └── processed/            # Generated datasets (JSONL)
+├── experiments/
+│   ├── results/              # Output CSV logs and PNG graphs
+│   ├── run_batch.py          # Main experiment script
+│   ├── visualize.py          # Graph generation script
+│   └── analyze_errors.py     # Hallucination analysis logic
+├── src/
+│   ├── app.py                # Interactive Streamlit Prototype (MVP)
+│   ├── generator.py          # LLM Integration (OpenAI + Bytez)
+│   ├── evaluator.py          # Metric calculation (BLEU, ROUGE, BERTScore)
+│   └── analysis.py           # Automated Hallucination Detection
+├── generate_dataset.py       # Dataset synthesis script
+├── requirements.txt          # Python dependencies
+└── README.md                 # Project documentation
+````
 
-This research aims to bridge the gap between the potential efficiency gains of AI and the rigorous quality and safety standards required in these domains.
+## 3. Motivation & Objectives
 
-## 3. Research Objectives
+  **Software Engineering:** Code documentation is vital for maintenance, yet often neglected. In legacy systems (e.g., COBOL), where original developers are unavailable, documentation is critical. LLMs often struggle with these less-common languages, leading to hallucinations.
 
-Based on our initial literature review, this project seeks to answer the following research questions:
+  **Research Goal:** To quantify the "Hallucination Gap" between modern and legacy code generation and test if automated judges can reliably catch these errors.
+
+ِBased on our initial literature review, this project seeks to answer the following research questions:
 
 1.  **RQ1:** How can evaluation frameworks for AI-generated documentation be unified across domains (software vs. healthcare) while remaining sensitive to domain-specific priorities (e.g., technical accuracy vs. patient safety)?
 2.  **RQ2:** What systematic patterns characterize AI documentation failures (hallucinations, omissions), and can these patterns be predicted or mitigated through targeted interventions (like structured prompting or RAG)?
@@ -79,41 +103,111 @@ This project is structured into three main phases, aligned with the course timel
   </tbody>
 </table>
 
-## 5. Getting Started
-*(This section will be updated once the prototype is developed.)*
 
-To get a local copy up and running, follow these simple steps.
+## 5. Getting Started
+
+Follow these steps to set up the environment and run the prototype.
 
 ### Prerequisites
 
-* List any required software and libraries
-    ```sh
-    pip install ...
-    ```
+  * Python 3.9+
+  * An API Key for **OpenAI** OR **Bytez**.
 
 ### Installation
 
-1.  Clone the repo
-    ```sh
-    git clone [https://github.com/your_username/your_repository.git](https://github.com/your_username/your_repository.git)
-    ```
-2.  Install packages
-    ```sh
-    ...
+1.  **Clone the repo**
+
+    ```bash
+    git clone [https://github.com/aeldesouky/SW-403_AI-Generated-Documentation-Systems.git](https://github.com/aeldesouky/SW-403_AI-Generated-Documentation-Systems.git)
+    cd ai-doc-generator
     ```
 
-## 6. Usage
+2.  **Install Dependencies**
 
-*(This section will be updated with instructions on how to run the prototype and experiments.)*
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-```python
-# Add code examples here
-````
+3.  **Environment Configuration**
+    Create a `.env` file in the root directory. You can use either OpenAI or Bytez (or both).
 
-## 7\. Team & Acknowledgements
+    ```env
+    # Option A: OpenAI
+    OPENAI_API_KEY=sk-proj-xxxxxxxx
+
+    # Option B: Bytez (Model agnostic)
+    BYTEZ_KEY=a00xxxxxxxx
+    ```
+
+## 6. Usage & Reproducibility
+
+### A. Running the Interactive Prototype (The MVP)
+
+This launches the web interface where you can test the model in real-time.
+
+```bash
+streamlit run src/app.py
+```
+
+  * **Features:**
+      * Real-time generation for Python and COBOL.
+      * Live calculation of BLEU, ROUGE, and BERTScore (if ground truth is provided).
+      * Toggle between OpenAI and Bytez backends.
+
+### B. Reproducing the Experiments
+
+To replicate the findings in our report, run the full batch pipeline:
+
+**1. Generate the Dataset**
+Creates a hybrid dataset of 20 Modern Python samples (CodeSearchNet) and 20 Synthetic COBOL samples.
+
+```bash
+python generate_dataset.py
+```
+
+  * *Output:* `data/processed/experiment_set.jsonl`
+
+**2. Run Batch Evaluation**
+Runs the LLM against the dataset, calculates metrics, and triggers the Hallucination Detector.
+
+```bash
+python experiments/run_batch.py
+```
+
+  * *Output:* `experiments/results/batch_run_v1.csv`
+
+**3. Generate Visualizations**
+Creates the distribution graphs used in the report.
+
+```bash
+python experiments/visualize.py
+```
+
+  * *Output:* `experiments/results/metric_dist.png` (BERTScore Comparison)
+  * *Output:* `experiments/results/error_dist.png` (Hallucination Types)
+
+## 7\. Architecture Diagram
+
+```mermaid
+graph TD
+    A[Dataset Source] -->|Synthesis| B[Hybrid Dataset JSONL];
+    B --> C[Batch Experiment Runner];
+    C -->|Input Code| D{Generator Module};
+    D -->|API Call| E[OpenAI / Bytez];
+    E -->|Docstring| D;
+    D -->|Generated Doc| C;
+    C --> F[Evaluator Module];
+    C --> G[Hallucination Auditor];
+    F -->|BLEU/BERT| H[Results CSV];
+    G -->|Pass/Fail/Error Type| H;
+    H --> I[Visualization Script];
+```
+
+## 8\. Team & Acknowledgements
 
   * **Ahmed Mostafa** (202201114)
   * **Ahmed Emad** (202202231)
   * **Seif Eldin** (202200973)
 
 We would like to thank our supervisor, **Prof. Doaa Shawky**, for her guidance and support on this project.
+
