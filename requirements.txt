@@ -1,0 +1,14 @@
+openai
+streamlit
+pandas
+rouge-score
+nltk
+bert-score
+torch
+datasets
+python-dotenv
+scikit-learn
+matplotlib 
+seaborn 
+tqdm
+bytez
