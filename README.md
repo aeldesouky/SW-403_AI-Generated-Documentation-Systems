@@ -110,7 +110,7 @@ Follow these steps to set up the environment and run the prototype.
 
 ### Prerequisites
 
-  * Python 3.9+
+  * Python 3.11+
   * An API Key for **OpenAI** OR **Bytez**.
 
 ### Installation
