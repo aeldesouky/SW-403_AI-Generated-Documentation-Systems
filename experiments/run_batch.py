@@ -65,15 +65,17 @@ def run_experiment_sequential(input_file, output_file, model="gpt-3.5-turbo", sa
         success = False
         attempt = 0
         max_retries = 3
-        current_sleep = 10 
+        current_sleep = 10 # Start with 10s if we hit an error
         
+        # Retry Loop for Rate Limits
         while not success and attempt < max_retries:
             try:
                 # A. Generate
                 gen_doc = generate_documentation(entry['code'], entry['language'], model_name=model)
                 
+                # CRITICAL FIX: Check if the generator returned an error string
                 if gen_doc.startswith("Error:"):
-                    raise Exception(gen_doc)
+                    raise Exception(gen_doc) # Force flow into the except block to trigger backoff
 
                 # B. Evaluate
                 metrics = calculate_metrics(entry['ground_truth'], gen_doc)
@@ -116,12 +118,15 @@ def run_experiment_sequential(input_file, output_file, model="gpt-3.5-turbo", sa
             except Exception as e:
                 attempt += 1
                 error_msg = str(e)
+                
+                # Check for Rate Limit keywords
                 if "429" in error_msg or "Rate limit" in error_msg:
-                    pbar.set_description(f"Rate Limit. Sleeping {current_sleep}s...")
+                    pbar.set_description(f"Rate Limit Hit. Sleeping {current_sleep}s...")
                     time.sleep(current_sleep)
-                    current_sleep *= 2 
+                    current_sleep *= 2 # Exponential Backoff (10s -> 20s -> 40s)
                 else:
-                    # Non-retryable error
+                    # If it's another error (like context length), just log and skip
+                    print(f"\nNon-Retryable Error on ID {entry['id']}: {e}")
                     break 
 
     # Save remaining
