@@ -1,4 +1,3 @@
-
 # AI-Generated Documentation Systems: Evaluation and Mitigation Strategies
 
 [![Course](https://img.shields.io/badge/Course-SW%20403%3A%20AI%20in%20Modern%20Software-blue)](https://)
@@ -11,33 +10,8 @@ This repository contains the research and development for the "AI in Modern Soft
 
 The proliferation of Large Language Models (LLMs) presents a significant opportunity to automate documentation. However, this automation is fraught with risks, including factual inaccuracies and hallucinations.
 
-**Phase 2 Focus:** We have developed a "Code Documenter" prototype that:
-1.  **Generates** documentation for Code and Legacy systems using configurable LLMs (OpenAI & Bytez).
-2.  **Evaluates** output using semantic metrics (BERTScore) and lexical metrics (BLEU/ROUGE).
-3.  **Audits** reliability using an "LLM-as-a-Judge" framework to automatically detect hallucinations and omission errors.
 
-## 2. Repository Structure
-
-```text
-ai-doc-generator/
-├── data/
-│   └── processed/            # Generated datasets (JSONL)
-├── experiments/
-│   ├── results/              # Output CSV logs and PNG graphs
-│   ├── run_batch.py          # Main experiment script
-│   ├── visualize.py          # Graph generation script
-│   └── analyze_errors.py     # Hallucination analysis logic
-├── src/
-│   ├── app.py                # Interactive Streamlit Prototype (MVP)
-│   ├── generator.py          # LLM Integration (OpenAI + Bytez)
-│   ├── evaluator.py          # Metric calculation (BLEU, ROUGE, BERTScore)
-│   └── analysis.py           # Automated Hallucination Detection
-├── generate_dataset.py       # Dataset synthesis script
-├── requirements.txt          # Python dependencies
-└── README.md                 # Project documentation
-````
-
-## 3. Motivation & Objectives
+## 2. Motivation & Objectives
 
   **Software Engineering:** Code documentation is vital for maintenance, yet often neglected. In legacy systems (e.g., COBOL), where original developers are unavailable, documentation is critical. LLMs often struggle with these less-common languages, leading to hallucinations.
 
@@ -51,7 +25,7 @@ ai-doc-generator/
 4.  **RQ4:** What regulatory and governance frameworks are needed to balance innovation with safety and accountability for AI documentation in regulated industries?
 5.  **RQ5:** Do AI documentation systems equitably serve diverse user populations (e.g., novice developers, non-native speakers), and how can biases in training data be identified and mitigated?
 
-## 4. Project Phases
+## 3. Project Phases
 This project is structured into three main phases, aligned with the course timeline.
 <table width="100%">
   <thead>
@@ -103,22 +77,53 @@ This project is structured into three main phases, aligned with the course timel
   </tbody>
 </table>
 
+## 4. Repository Structure
 
-## 5. Getting Started
+This project follows a modular structure to separate source code, experiments, and data.
 
-Follow these steps to set up the environment and run the prototype.
+```text
+ai-doc-generator/
+├── data/
+│   ├── processed/            # Final clean datasets (JSONL)
+│   └── raw/                  # Cached downloads from Hugging Face
+├── experiments/
+│   ├── logs/                 # Checkpoint CSVs (resumable runs)
+│   ├── reports/              # Final aggregated metrics
+│   ├── results/              # Generated graphs and analysis CSVs
+│   ├── analyze_results.py    # Aggregates final metrics for reporting
+│   ├── run_batch.py          # Main experiment execution script
+│   ├── run_param_sweep.py    # Temperature comparison script
+│   └── visualize.py          # Graph generation script
+├── src/
+│   ├── analysis.py           # Automated Hallucination Detection
+│   ├── app.py                # Interactive Streamlit Prototype
+│   ├── evaluator.py          # Metric calculation (BLEU, ROUGE, BERTScore)
+│   └── generator.py          # LLM Integration (OpenAI + Bytez)
+├── .env                      # API Keys (GitIgnored)
+├── generate_dataset.py       # Dataset synthesis tool
+├── requirements.txt          # Dependencies
+├── templates.json            # Configurable prompt templates
+├── README.md                 # Main Documentation
+├── Report.md                 # Full Phase 2 Research Report
+├── Sampling guide.md         # Statistical sampling instructions
+└── TESTING_REPORT.md         # detailed testing logs
+````
+
+## 5\. Getting Started
+
+Follow these steps to set up the environment.
 
 ### Prerequisites
 
-  * Python 3.11+
+  * **Python 3.11+** (Required for updated `bert_score` and `bytez` compatibility).
   * An API Key for **OpenAI** OR **Bytez**.
 
 ### Installation
 
-1.  **Clone the repo**
+1.  **Clone the repository**
 
     ```bash
-    git clone [https://github.com/aeldesouky/SW-403_AI-Generated-Documentation-Systems.git](https://github.com/aeldesouky/SW-403_AI-Generated-Documentation-Systems.git)
+    git clone https://github.com/aeldesouky/SW-403_AI-Generated-Documentation-Systems.git
     cd ai-doc-generator
     ```
 
@@ -129,62 +134,66 @@ Follow these steps to set up the environment and run the prototype.
     ```
 
 3.  **Environment Configuration**
-    Create a `.env` file in the root directory. You can use either OpenAI or Bytez (or both).
+    Create a `.env` file in the root directory.
 
     ```env
-    # Option A: OpenAI
-    OPENAI_API_KEY=sk-proj-xxxxxxxx
+    # Required: Choose one or both
+    OPENAI_API_KEY=sk-...
+    BYTEZ_KEY=bz-... 
 
-    # Option B: Bytez (Model agnostic)
-    BYTEZ_KEY=a00xxxxxxxx
+    # Optional: For accessing gated datasets (The Stack)
+    HF_TOKEN=hf_...
     ```
 
-## 6. Usage & Reproducibility
+## 6\. Usage & Reproducibility
 
-### A. Running the Interactive Prototype (The MVP)
+This section outlines how to reproduce the results found in **[Report.md](Report.md)**.
 
-This launches the web interface where you can test the model in real-time.
+### A. Dataset Generation
+
+Before running experiments, you must generate the hybrid dataset (Python + Real/Synthetic COBOL).
+
+```bash
+python generate_dataset.py --limit 1000
+```
+
+  * **Note:** This attempts to download real COBOL from The Stack. If `HF_TOKEN` is missing, it falls back to synthetic templates.
+  * **Output:** `data/processed/full_experiment_set.jsonl`
+
+### B. Running Experiments
+
+We provide three modules for experimentation. Please refer to **[Experimentation\_Guide.md](https://github.com/aeldesouky/SW-403_AI-Generated-Documentation-Systems/blob/main/Experimentation_Guide.md)** and **[Sampling\_guide.md](https://github.com/aeldesouky/SW-403_AI-Generated-Documentation-Systems/blob/main/Sampling_guide.md)** for detailed flags and configuration options.
+
+**1. Main Evaluation Pipeline**
+Runs the generator and evaluator on the dataset.
+
+```bash
+python experiments/run_batch.py --sample 500 --delay 2.0
+```
+
+**2. Parameter Sweep**
+Compares model performance across different temperatures (0.2, 0.5, 0.8).
+
+```bash
+python experiments/run_param_sweep.py
+```
+
+**3. Result Analysis**
+Aggregates the CSV logs into the final tables used in the report.
+
+```bash
+python experiments/analyze_results.py
+```
+
+### C. Running the Prototype (GUI)
+
+To demonstrate the tool interactively:
 
 ```bash
 streamlit run src/app.py
 ```
 
-  * **Features:**
-      * Real-time generation for Python and COBOL.
-      * Live calculation of BLEU, ROUGE, and BERTScore (if ground truth is provided).
-      * Toggle between OpenAI and Bytez backends.
-
-### B. Reproducing the Experiments
-
-To replicate the findings in our report, run the full batch pipeline:
-
-**1. Generate the Dataset**
-Creates a hybrid dataset of 20 Modern Python samples (CodeSearchNet) and 20 Synthetic COBOL samples.
-
-```bash
-python generate_dataset.py
-```
-
-  * *Output:* `data/processed/experiment_set.jsonl`
-
-**2. Run Batch Evaluation**
-Runs the LLM against the dataset, calculates metrics, and triggers the Hallucination Detector.
-
-```bash
-python experiments/run_batch.py
-```
-
-  * *Output:* `experiments/results/batch_run_v1.csv`
-
-**3. Generate Visualizations**
-Creates the distribution graphs used in the report.
-
-```bash
-python experiments/visualize.py
-```
-
-  * *Output:* `experiments/results/metric_dist.png` (BERTScore Comparison)
-  * *Output:* `experiments/results/error_dist.png` (Hallucination Types)
+  * **Features:** Real-time Code-to-Doc generation with live Hallucination Auditing.
 
 ## 7\. Architecture Diagram
 
@@ -203,6 +212,7 @@ graph TD
     H --> I[Visualization Script];
 ```
 
+
 ## 8\. Team & Acknowledgements
 
   * **Ahmed Mostafa** (202201114)
@@ -211,3 +221,20 @@ graph TD
 
 We would like to thank our supervisor, **Prof. Doaa Shawky**, for her guidance and support on this project.
 
+
+## 9. Licensing & Data Acknowledgments
+
+This research project relies on open-source datasets provided by the machine learning community. We gratefully acknowledge the authors and organizations who made this data available.
+
+### A. The Stack (Legacy Code Data)
+* **Dataset:** [bigcode/the-stack](https://huggingface.co/datasets/bigcode/the-stack)
+* **Usage:** Sourced real-world COBOL files to evaluate legacy code performance.
+* **License:** **BigCode OpenRAIL-M v1.0**.
+* **Attribution:** Kocetkov et al., "The Stack: 3 TB of permissively licensed source code," 2022.
+* **Compliance Note:** Access to this dataset is gated. Our data generation scripts (`generate_dataset.py`) implement authentication via Hugging Face tokens to strictly adhere to the OpenRAIL-M license terms regarding responsible use and attribution.
+
+### B. CodeXGlue (Modern Code Data)
+* **Dataset:** [google/code_x_glue_ct_code_to_text](https://huggingface.co/datasets/google/code_x_glue_ct_code_to_text) (Derived from Microsoft CodeXGlue).
+* **Usage:** Sourced Python function-docstring pairs to establish baseline metrics.
+* **License:** **CDLA-Permissive-v1.0** (Community Data License Agreement).
+* **Attribution:** Lu et al., "CodeXGlue: A Machine Learning Benchmark Dataset for Code Understanding and Generation," 2021.

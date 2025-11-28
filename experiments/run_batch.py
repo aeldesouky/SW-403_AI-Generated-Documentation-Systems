@@ -13,14 +13,22 @@ from src.generator import generate_documentation
 from src.evaluator import calculate_metrics
 from src.analysis import detect_hallucination
 
-CHECKPOINT_FILE = "experiments/results/checkpoint_log.csv"
+# --- CONFIGURATION ---
+LOG_DIR = "experiments/logs"
+RESULTS_DIR = "experiments/results"
+CHECKPOINT_FILE = os.path.join(LOG_DIR, "checkpoint_log.csv")
+
+# Ensure directories exist
+os.makedirs(LOG_DIR, exist_ok=True)
+os.makedirs(RESULTS_DIR, exist_ok=True)
 
 def run_experiment_sequential(input_file, output_file, model="gpt-3.5-turbo", sample_size=None, base_delay=2.0):
-    print(f"Starting Sequential Experiment on {input_file}")
-    print(f"Mode: Sequential with Smart Backoff (Base Delay: {base_delay}s)")
+    print(f"Starting Experiment on {input_file}")
+    print(f"Logging checkpoints to: {CHECKPOINT_FILE}")
+    print(f"Final Results will save to: {output_file}")
     
     # 1. Load Data
-    with open(input_file, 'r') as f:
+    with open(input_file, 'r', encoding='utf-8') as f:
         dataset = [json.loads(line) for line in f]
 
     # 2. Apply Sampling
@@ -75,27 +83,36 @@ def run_experiment_sequential(input_file, output_file, model="gpt-3.5-turbo", sa
                 # C. Detect Hallucination
                 hallucination_data = detect_hallucination(entry['code'], gen_doc)
                 
+                # D. Format Row for Rubric
+                # Columns: | Input | Model Output | Expected | Error Type | Hallucination? | Root Cause Hypothesis |
                 row = {
                     "id": entry['id'],
                     "language": entry['language'],
-                    "bleu_score": metrics['bleu'],
-                    "bert_sim": metrics['bert_similarity'],
-                    "has_hallucination": hallucination_data['has_hallucination'],
-                    "error_type": hallucination_data['error_type'],
-                    "root_cause": hallucination_data['root_cause'],
-                    "output_doc": gen_doc
+                    
+                    # Rubric Required Columns
+                    "Input": entry['code'],
+                    "Model Output": gen_doc,
+                    "Expected": entry['ground_truth'],
+                    "Error Type": hallucination_data['error_type'],
+                    "Hallucination?": hallucination_data['has_hallucination'],
+                    "Root Cause Hypothesis": hallucination_data['root_cause'],
+                    
+                    # Metrics (Keep for Deliverable 3)
+                    "BLEU": metrics['bleu'],
+                    "BERTScore": metrics['bert_similarity']
                 }
-                results.append(row)
-                success = True # Exit retry loop
                 
-                # D. Save Checkpoint
+                results.append(row)
+                success = True
+                
+                # E. Save Checkpoint (every 5)
                 if len(results) >= 5:
                     df_chunk = pd.DataFrame(results)
                     header = not os.path.exists(CHECKPOINT_FILE)
                     df_chunk.to_csv(CHECKPOINT_FILE, mode='a', header=header, index=False)
                     results = [] 
                 
-                # E. Success Delay (Standard pacing)
+                # F. Success Delay
                 time.sleep(base_delay)
 
             except Exception as e:
@@ -118,20 +135,23 @@ def run_experiment_sequential(input_file, output_file, model="gpt-3.5-turbo", sa
         header = not os.path.exists(CHECKPOINT_FILE)
         df_chunk.to_csv(CHECKPOINT_FILE, mode='a', header=header, index=False)
 
-    print(f"Run Complete. Final results in {CHECKPOINT_FILE}")
+    # 5. Final Save to Results Dir (Consolidating everything)
+    print("Consolidating logs into final results file...")
+    if os.path.exists(CHECKPOINT_FILE):
+        final_df = pd.read_csv(CHECKPOINT_FILE)
+        final_df.to_csv(output_file, index=False)
+        print(f"Experiment Complete. Final Report: {output_file}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--workers", type=int, default=1, help="Ignored")
     parser.add_argument("--sample", type=int, default=500, help="Number of samples to process")
-    parser.add_argument("--delay", type=float, default=2.0, help="Seconds to sleep between requests")
+    parser.add_argument("--delay", type=float, default=3.0, help="Seconds to sleep between requests")
     args = parser.parse_args()
-
-    os.makedirs("experiments/results", exist_ok=True)
     
     run_experiment_sequential(
         input_file="data/processed/full_experiment_set.jsonl", 
-        output_file="experiments/results/final_results.csv",
+        output_file=os.path.join(RESULTS_DIR, "final_hallucination_report.csv"),
         sample_size=args.sample,
         base_delay=args.delay
     )

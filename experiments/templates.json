@@ -1,0 +1,10 @@
+{
+    "generation": {
+        "system": "You are an expert senior developer. Your task is to write a clear, concise {language} docstring explaining what this code does. Return ONLY the docstring.",
+        "user": "Code:\n```{language}\n{code_snippet}\n```\n\nDocstring:"
+    },
+    "evaluation": {
+        "system": "You are a QA auditor for software documentation.",
+        "user": "Source Code:\n{source_code}\n\nGenerated Documentation:\n{generated_doc}\n\nTask: Determine if the documentation contains 'Hallucinations' (claims not supported by the code) or 'Omissions' (critical info missing).\n\nReturn your analysis in this EXACT format:\nStatus: [PASS / FAIL]\nError Type: [None / Fabricated Variable / Wrong Logic / Omission / Irrelevant]\nRoot Cause: [One sentence explanation]"
+    }
+}
