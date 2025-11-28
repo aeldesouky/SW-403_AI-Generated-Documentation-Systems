@@ -12,3 +12,4 @@ matplotlib
 seaborn 
 tqdm
 bytez
+huggingface_hub

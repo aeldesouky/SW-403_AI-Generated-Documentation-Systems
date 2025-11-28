@@ -7,7 +7,7 @@ import os
 
 st.set_page_config(page_title="AI Code Documenter", layout="wide")
 
-st.title("🤖 AI-Powered Legacy & Modern Code Documenter")
+st.title("I-Powered Legacy & Modern Code Documenter")
 st.markdown("### SW 403 Project - Phase 2 Prototype")
 
 BYTEZ_ACTIVE = os.getenv("BYTEZ_KEY") is not None and os.getenv("BYTEZ_KEY").strip() != ""
