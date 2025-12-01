@@ -1,10 +1,14 @@
-# AI-Generated Documentation Systems: Evaluation and Mitigation Strategies
+<img width="1600" height="880" alt="image" src="https://github.com/user-attachments/assets/c38f1dd2-c0d5-40fd-af54-b76410b8c669" /># AI-Generated Documentation Systems: Evaluation and Mitigation Strategies
 
 [![Course](https://img.shields.io/badge/Course-SW%20403%3A%20AI%20in%20Modern%20Software-blue)](https://)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-yellow)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red)](https://streamlit.io/)
 
 This repository contains the research and development for the "AI in Modern Software" (SW 403) course project. It implements an automated documentation system focusing on the "Legacy Code Crisis," comparing LLM performance on modern (Python) vs. legacy (COBOL) systems.
+
+
+![GUI_preview](https://github.com/user-attachments/assets/75e9ce83-e78a-4403-8760-75838a3d6d83)
+
 
 ## 1. Project Description
 
@@ -216,8 +220,8 @@ graph TD
 ## 8\. Team & Acknowledgements
 
   * **Ahmed Mostafa** (202201114)
-  * **Ahmed Emad** (202202231)
   * **Seif Eldin** (202200973)
+  * **Ahmed Emad** (202202231)
 
 We would like to thank our supervisor, **Prof. Doaa Shawky**, for her guidance and support on this project.
 
