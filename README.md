@@ -1,4 +1,4 @@
-<img width="1600" height="880" alt="image" src="https://github.com/user-attachments/assets/c38f1dd2-c0d5-40fd-af54-b76410b8c669" /># AI-Generated Documentation Systems: Evaluation and Mitigation Strategies
+# AI-Generated Documentation Systems: Evaluation and Mitigation Strategies
 
 [![Course](https://img.shields.io/badge/Course-SW%20403%3A%20AI%20in%20Modern%20Software-blue)](https://)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-yellow)](https://www.python.org/)
