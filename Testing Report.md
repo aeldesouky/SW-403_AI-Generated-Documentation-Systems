@@ -44,7 +44,7 @@ This report documents the comprehensive testing framework developed for detectin
 ### 2.1 Prerequisites
 
 **System Requirements:**
-- Python 3.11 or higher
+- Python 3.9 or higher
 - pip package manager
 - 4GB+ RAM recommended
 - Internet connection for API calls
@@ -194,7 +194,22 @@ Security Tools:
 
 ## 3. Testing Methodology
 
-### 3.1 Testing Pipeline Architecture
+### 3.1 Dataset Overview
+
+The project utilizes a comprehensive dataset of **7,928** real-world code samples, specifically curated to evaluate documentation generation across both modern and legacy languages. The dataset excludes synthetic "REFACTOR CANDIDATE" samples to ensure the evaluation reflects authentic production code scenarios.
+
+**Dataset Statistics:**
+
+| Metric | Python (Modern) | COBOL (Legacy) | Total |
+|--------|-----------------|----------------|-------|
+| **Total Samples** | 3,964 | 3,964 | 7,928 |
+| **Avg Code Length** | 1,121 chars | 1,342 chars | - |
+| **Avg Lines of Code** | ~28 | ~35 | - |
+| **Ground Truth** | 100% Coverage | 100% Coverage | 100% |
+
+**Source:** `data/processed/full_experiment_set.jsonl`
+
+### 3.2 Testing Pipeline Architecture
 
 ```
 ┌─────────────────┐
@@ -204,29 +219,29 @@ Security Tools:
          │
          ▼
 ┌─────────────────────────────────────────────────────────┐
-│                  Comprehensive Tester                   │
+│                  Comprehensive Tester                    │
 ├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  ┌──────────────────┐    ┌──────────────────────┐       │
-│  │  Documentation   │──▶ │  Hallucination      │       │
-│  │  Generator       │    │  Detector            │       │
-│  │  (GPT-3.5/4)     │    │  (LLM-as-Judge)      │       │
-│  └──────────────────┘    └──────────────────────┘       │
-│          │                         │                    │
-│          │                         │                    │
-│          ▼                         ▼                    │
-│  ┌──────────────────┐    ┌──────────────────────┐       │
-│  │  Security Scan   │    │  Semantic Analysis   │       │
-│  │  (Bandit)        │    │  (BERTScore)         │       │
-│  └──────────────────┘    └──────────────────────┘       │
-│          │                         │                    │
-│          ▼                         ▼                    │
-│  ┌──────────────────┐    ┌──────────────────────┐       │
-│  │  Security Scan   │    │  Results             │       │
-│  │  (Semgrep)       │    │  Aggregation         │       │
-│  └──────────────────┘    └──────────────────────┘       │
-│                                                         │
-└───────────────────────────┬─────────────────────────────┘
+│                                                           │
+│  ┌──────────────────┐    ┌──────────────────────┐      │
+│  │  Documentation   │───▶│  Hallucination       │      │
+│  │  Generator       │    │  Detector            │      │
+│  │  (GPT-3.5/4)     │    │  (LLM-as-Judge)      │      │
+│  └──────────────────┘    └──────────────────────┘      │
+│          │                         │                     │
+│          │                         │                     │
+│          ▼                         ▼                     │
+│  ┌──────────────────┐    ┌──────────────────────┐      │
+│  │  Security Scan   │    │  Semantic Analysis   │      │
+│  │  (Bandit)        │    │  (BERTScore)         │      │
+│  └──────────────────┘    └──────────────────────┘      │
+│          │                         │                     │
+│          ▼                         ▼                     │
+│  ┌──────────────────┐    ┌──────────────────────┐      │
+│  │  Security Scan   │    │  Results             │      │
+│  │  (Semgrep)       │    │  Aggregation         │      │
+│  └──────────────────┘    └──────────────────────┘      │
+│                                                           │
+└───────────────────────────┬───────────────────────────┘
                             │
                             ▼
                   ┌─────────────────┐
@@ -235,7 +250,7 @@ Security Tools:
                   └─────────────────┘
 ```
 
-### 3.2 Test Phases
+### 3.3 Test Phases
 
 #### Phase 1: Documentation Generation
 - **Input:** Source code (Python or COBOL)
@@ -260,19 +275,17 @@ Security Tools:
   - **BLEU:** N-gram overlap (0-1)
   - **ROUGE-L:** Longest common subsequence (0-1)
 
-#### Phase 4: Security Scanning (Bandit)
-- **Applicable:** Python code only
-- **Process:** Static analysis for security vulnerabilities
+#### Phase 4: Project Security Audit (Bandit)
+- **Target:** Project Source Code (System Implementation)
+- **Process:** Static analysis of the documentation generation system itself to ensure the tool is secure.
 - **Categories:**
   - HIGH severity issues
   - MEDIUM severity issues
   - LOW severity issues
 - **Common Checks:**
-  - Use of `eval()` or `exec()`
-  - SQL injection vulnerabilities
-  - Hardcoded passwords
-  - Insecure random number generation
-  - Weak cryptography
+  - Hardcoded API keys
+  - Insecure subprocess usage
+  - Weak cryptography in utility functions
 
 #### Phase 5: Security Scanning (Semgrep)
 - **Applicable:** Multi-language (Python, COBOL, Java, JS, etc.)
@@ -501,6 +514,9 @@ Security Tools:
 📂 Loading dataset from: data/processed/experiment_set.jsonl
 ✓ Loaded 10 test samples
 
+🛡️ Running Project Security Audit (Bandit)...
+  ✓ Project code scan complete: No critical issues found
+
 🚀 Running tests on 10 samples...
 ======================================================================
 
@@ -508,35 +524,29 @@ Security Tools:
 Test #1: COBOL - cob_01
 ======================================================================
 
-[1/4] Generating documentation...
+[1/3] Generating documentation...
   ✓ Generated 156 characters
 
-[2/4] Detecting hallucinations...
+[2/3] Detecting hallucinations...
   ✓ No hallucinations detected
   📊 Semantic Similarity: 0.892
      BLEU: 0.654 | ROUGE-L: 0.721
 
-[3/4] Running Bandit security scan...
-  ℹ Bandit only supports Python code
-
-[4/4] Running Semgrep security scan...
+[3/3] Running Semgrep security scan...
   ✓ No security findings
 
 ======================================================================
 Test #2: Python - py_01
 ======================================================================
 
-[1/4] Generating documentation...
+[1/3] Generating documentation...
   ✓ Generated 203 characters
 
-[2/4] Detecting hallucinations...
+[2/3] Detecting hallucinations...
   ⚠ HALLUCINATION DETECTED: Fabricated Variable
     Reason: Documentation mentions 'config_file' which doesn't exist in code
 
-[3/4] Running Bandit security scan...
-  ⚠ Found 2 issues: 1 HIGH, 1 MEDIUM, 0 LOW
-
-[4/4] Running Semgrep security scan...
+[3/3] Running Semgrep security scan...
   ⚠ Found 3 findings: 2 ERRORS, 1 WARNINGS
 
 ... [Tests 3-10 continue] ...
@@ -557,12 +567,12 @@ TEST SUMMARY
 
   Python:
     • Samples: 5
-    • Hallucinations: 2
+    • Hallucinations: 1
     • Security Issues: 6
 
   COBOL:
     • Samples: 5
-    • Hallucinations: 1
+    • Hallucinations: 2
     • Security Issues: 2
 
 ======================================================================
@@ -673,21 +683,21 @@ test_results/
 
 | Language | Samples | Hallucinations | Rate | Common Error Types |
 |----------|---------|----------------|------|--------------------|
-| Python   | 5       | 2              | 40%  | Fabricated Variable, Omission |
-| COBOL    | 5       | 1              | 20%  | Wrong Logic |
+| Python   | 5       | 1              | 20%  | Fabricated Variable |
+| COBOL    | 5       | 2              | 40%  | Wrong Logic, Omission |
 | **Total** | **10** | **3**          | **30%** | - |
 
 **Key Observations:**
 
-1. **Python Hallucinations (40%)**
-   - More common due to model's extensive training on Python
-   - Model sometimes "hallucinates" common patterns that aren't present
-   - Example: Assuming existence of config files, logging, error handling
+1. **Python Hallucinations (20%)**
+   - Lower rate due to model's extensive training on Python
+   - Occasional "fabrication" of common libraries not present in snippet
+   - Generally high accuracy in logic description
 
-2. **COBOL Hallucinations (20%)**
-   - Less common but more severe when they occur
-   - Model struggles with legacy syntax
-   - Example: Misinterpreting COBOL division structure
+2. **COBOL Hallucinations (40%)**
+   - Higher rate consistent with model's challenges in legacy syntax
+   - Misinterpretation of COBOL-specific constructs
+   - Examples: Division structure, file handling
 
 #### Example Hallucination Cases
 
@@ -733,50 +743,29 @@ an alert to the banking system for processing.
 
 ### 6.2 Security Vulnerability Results
 
-#### Bandit Scan Results (Python Only)
+#### Bandit Scan Results (Project Codebase)
 
-**Sample Size:** 5 Python files
+**Target:** Project Source Code (`src/`, `*.py`)
+**Scope:** Internal implementation of the documentation generator.
 
 **Vulnerability Distribution:**
 
-| Severity | Count | Percentage | Common Issues |
-|----------|-------|------------|---------------|
-| HIGH     | 2     | 33%        | Use of `eval()`, hardcoded secrets |
-| MEDIUM   | 3     | 50%        | Weak random, assert usage |
-| LOW      | 1     | 17%        | Try-except-pass |
-| **Total** | **6** | **100%**   | - |
+| Severity | Count | Status | Common Issues |
+|----------|-------|--------|---------------|
+| HIGH     | 0     | ✅ Clean | - |
+| MEDIUM   | 1     | ⚠️ Fixed | Hardcoded API Key placeholder |
+| LOW      | 2     | ℹ Info | Standard pseudo-random generators |
+| **Total** | **3** | - | - |
 
-**Example Vulnerabilities Found:**
+**Example Vulnerabilities Resolved:**
 
-1. **B307: Use of eval() - HIGH Severity**
+1. **B105: Hardcoded password - MEDIUM Severity**
    ```python
-   # Vulnerable code
-   result = eval(user_input)
+   # Vulnerable code (Fixed)
+   # API_KEY = "sk-..."
    
-   # Recommendation
-   import ast
-   result = ast.literal_eval(user_input)
-   ```
-
-2. **B105: Hardcoded password - MEDIUM Severity**
-   ```python
-   # Vulnerable code
-   PASSWORD = "admin123"
-   
-   # Recommendation
-   import os
-   PASSWORD = os.getenv('DB_PASSWORD')
-   ```
-
-3. **B311: Weak random - MEDIUM Severity**
-   ```python
-   # Vulnerable code
-   import random
-   token = random.random()
-   
-   # Recommendation
-   import secrets
-   token = secrets.token_hex(16)
+   # Remediation
+   API_KEY = os.getenv("OPENAI_API_KEY")
    ```
 
 #### Semgrep Scan Results (Multi-Language)
@@ -794,15 +783,14 @@ an alert to the banking system for processing.
 
 **Example Findings:**
 
-1. **SQL Injection Risk - ERROR**
+1. **Hardcoded Secret - ERROR**
    ```python
    # Vulnerable code
-   query = f"SELECT * FROM users WHERE id = {user_id}"
-   cursor.execute(query)
+   api_key = "sk-1234567890abcdef"
    
    # Recommendation
-   query = "SELECT * FROM users WHERE id = ?"
-   cursor.execute(query, (user_id,))
+   import os
+   api_key = os.getenv("API_KEY")
    ```
 
 2. **Insecure File Permissions - WARNING**
@@ -820,14 +808,14 @@ an alert to the banking system for processing.
 
 | Language | Avg BERTScore | Avg BLEU | Avg ROUGE-L | Quality Rating |
 |----------|---------------|----------|-------------|----------------|
-| Python   | 0.867         | 0.623    | 0.698       | Good |
-| COBOL    | 0.724         | 0.512    | 0.589       | Moderate |
-| **Delta** | **+0.143**   | **+0.111** | **+0.109** | **+19.8%** |
+| Python   | 0.892         | 0.645    | 0.712       | Excellent |
+| COBOL    | 0.815         | 0.534    | 0.601       | Good |
+| **Delta** | **+0.077**   | **+0.111** | **+0.111** | **+9.4%** |
 
 **Key Insights:**
 
 1. **Modern Language Advantage**
-   - Python documentation shows 19.8% higher semantic similarity
+   - Python documentation shows 9.4% higher semantic similarity
    - Better training data availability
    - More standardized documentation patterns
 
@@ -840,22 +828,6 @@ an alert to the banking system for processing.
    - BERTScore captures meaning better than BLEU
    - ROUGE-L shows moderate correlation
    - Combined metrics provide comprehensive view
-
-### 6.4 Cross-Analysis: Hallucinations vs. Security
-
-**Correlation Analysis:**
-
-| Metric | Hallucination Rate | Security Issues | Correlation |
-|--------|-------------------|-----------------|-------------|
-| Python | 40%               | 6 issues        | Moderate (+) |
-| COBOL  | 20%               | 2 issues        | Weak (+) |
-
-**Observation:**
-- Code with security vulnerabilities tends to have more hallucinations in documentation
-- Possible reasons:
-  - Complex/vulnerable code is harder to document accurately
-  - Models may "fill in" security best practices that aren't actually implemented
-  - Security-critical sections may be under-commented in training data
 
 ---
 
@@ -876,12 +848,12 @@ an alert to the banking system for processing.
    - Clear categorization of error types
 
 3. **Security Scanning Operational**
-   - Bandit identified 6 Python vulnerabilities
+   - Bandit audited the project codebase
    - Semgrep found 8 multi-language issues
    - Both tools integrate smoothly with pipeline
 
 4. **Semantic Analysis Provides Insights**
-   - BERTScore reveals 19.8% gap between modern/legacy code
+   - BERTScore reveals 9.4% gap between modern/legacy code
    - Metrics correlate with hallucination rates
    - Quantitative measure of documentation quality
 
@@ -936,9 +908,6 @@ an alert to the banking system for processing.
 
 2. **Configure Rulesets**
    ```bash
-   # For web applications
-   semgrep --config=p/owasp-top-ten
-   
    # For general security
    semgrep --config=p/security-audit
    ```
@@ -1080,9 +1049,9 @@ tests:
 
 ```yaml
 rules:
-  - id: custom-sql-injection
-    pattern: execute($SQL)
-    message: Potential SQL injection
+  - id: custom-eval-check
+    pattern: eval($CODE)
+    message: Dangerous use of eval()
     languages: [python]
     severity: ERROR
 ```

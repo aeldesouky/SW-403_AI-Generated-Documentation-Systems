@@ -396,13 +396,29 @@ class ComprehensiveTester:
         test_samples = []
         
         try:
+            python_samples = []
+            cobol_samples = []
+            target_per_lang = max_samples // 2
+
             with open(dataset_path, 'r', encoding='utf-8') as f:
-                for i, line in enumerate(f):
-                    if i >= max_samples:
+                for line in f:
+                    # Stop if we have enough of both
+                    if len(python_samples) >= target_per_lang and len(cobol_samples) >= target_per_lang:
                         break
-                    test_samples.append(json.loads(line))
+                    
+                    try:
+                        sample = json.loads(line)
+                        lang = sample.get('language', '').lower()
+                        
+                        if lang == 'python' and len(python_samples) < target_per_lang:
+                            python_samples.append(sample)
+                        elif lang == 'cobol' and len(cobol_samples) < target_per_lang:
+                            cobol_samples.append(sample)
+                    except json.JSONDecodeError:
+                        continue
             
-            print(f"✓ Loaded {len(test_samples)} test samples")
+            test_samples = python_samples + cobol_samples
+            print(f"✓ Loaded {len(test_samples)} test samples ({len(python_samples)} Python, {len(cobol_samples)} COBOL)")
             
         except FileNotFoundError:
             print(f"✗ Dataset not found: {dataset_path}")
