@@ -3,9 +3,9 @@ Multi-Judge Hallucination Detection Module
 ==========================================
 
 This module implements ensemble hallucination detection using 3 local Ollama models:
-1. Code Searcher (qwen2.5-coder) - Finds code discrepancies
+1. Web Searcher (fact verification) - Verifies claims against code facts
 2. Reasoner (deepseek-r1) - Step-by-step logical analysis  
-3. Thinker (gemma3) - Holistic pattern recognition
+3. Thinker (gemma3) - Holistic unified docstring analysis
 
 Each model votes on whether documentation contains hallucinations,
 and the final verdict is determined by majority voting.
@@ -33,7 +33,7 @@ except ImportError:
 
 class JudgeRole(Enum):
     """Specialized roles for each judge model."""
-    CODE_SEARCHER = "code_searcher"
+    WEB_SEARCHER = "web_searcher"
     REASONER = "reasoner"
     THINKER = "thinker"
 
@@ -77,10 +77,10 @@ class EnsembleResult:
 
 # Model configuration for 16GB RAM
 MODEL_CONFIG = {
-    JudgeRole.CODE_SEARCHER: {
-        "model": "qwen2.5-coder:7b",
-        "description": "Analyzes code structure and finds discrepancies",
-        "prompt_template": """You are a code analysis expert. Your job is to verify if the documentation accurately describes the code.
+    JudgeRole.WEB_SEARCHER: {
+        "model": "llama3.2:3b",
+        "description": "Fact verification - verifies documentation claims against code",
+        "prompt_template": """You are a fact-checker for software documentation. Your job is to verify if each claim in the documentation is factually accurate based on the source code.
 
 SOURCE CODE:
 ```
@@ -90,12 +90,12 @@ SOURCE CODE:
 GENERATED DOCUMENTATION:
 {generated_doc}
 
-TASK: Search the code and verify each claim in the documentation.
+TASK: For each factual claim in the documentation, verify it against the code.
 
-For each claim:
-1. Does this variable/function/parameter actually exist in the code?
-2. Does the code actually perform the operations described?
-3. Are there fabricated elements mentioned that don't exist?
+Check:
+1. Are all mentioned variables, functions, and parameters real?
+2. Are the described operations actually performed in the code?
+3. Are there any claims that cannot be verified from the code?
 
 Respond in this EXACT format:
 Status: [PASS / FAIL]
@@ -133,8 +133,8 @@ Confidence: [0.0 to 1.0]"""
     
     JudgeRole.THINKER: {
         "model": "gemma3:4b",
-        "description": "Holistic pattern analysis and big-picture thinking",
-        "prompt_template": """You are a documentation quality expert performing holistic analysis.
+        "description": "Holistic unified analysis - processes entire docstring as a whole",
+        "prompt_template": """You are a documentation quality expert performing HOLISTIC analysis. You must analyze the documentation as a UNIFIED WHOLE, not individual parts.
 
 SOURCE CODE:
 ```
@@ -144,13 +144,15 @@ SOURCE CODE:
 GENERATED DOCUMENTATION:
 {generated_doc}
 
-TASK: Analyze the documentation as a whole.
+TASK: Analyze the ENTIRE documentation as a unified configuration, considering how all parts relate to the code's overall purpose.
 
-Consider:
-1. Does the overall description match the code's actual purpose?
-2. Are there any contradictions between the code and documentation?
-3. Is anything critical missing from the documentation?
-4. Does the documentation describe functionality that doesn't exist?
+Holistic Analysis Steps:
+1. UNIFIED PURPOSE: Does the documentation's overall message match the code's actual purpose?
+2. INTERNAL CONSISTENCY: Are all parts of the documentation consistent with each other?
+3. STRUCTURAL ALIGNMENT: Does the documentation structure reflect the code's structure?
+4. COMPLETENESS: As a whole, does the documentation capture the code's essential behavior?
+
+Do NOT analyze individual claims separately. Consider the entire documentation as one unified entity.
 
 Respond in this EXACT format:
 Status: [PASS / FAIL]  
@@ -554,11 +556,11 @@ def demo():
     # Hallucinated documentation (should FAIL)
     bad_doc = "Calculates the discounted price and logs the result to a database. Returns a tuple of (original_price, discounted_price, tax_amount)."
     
-    print("\n📋 Test Code:")
+    print("\nTest Code:")
     print(test_code)
     
     try:
-        detector = MultiJudgeHallucinationDetector(auto_pull_models=True)
+        detector = MultiJudgeHallucinationDetector(auto_pull_models=False)
         
         print("\n" + "=" * 60)
         print("TEST 1: Good Documentation (should PASS)")
@@ -575,11 +577,12 @@ def demo():
         print(detector.get_detailed_report(result2))
         
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\nError: {e}")
         print("\nMake sure:")
         print("1. Ollama is running: ollama serve")
-        print("2. Models are available: ollama pull qwen2.5-coder:7b deepseek-r1:7b gemma3:4b")
+        print("2. Models are available: ollama pull llama3.2:3b deepseek-r1:7b gemma3:4b")
 
 
 if __name__ == "__main__":
     demo()
+
