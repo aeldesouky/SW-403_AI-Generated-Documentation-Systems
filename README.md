@@ -199,6 +199,70 @@ streamlit run src/app.py
 
   * **Features:** Real-time Code-to-Doc generation with live Hallucination Auditing.
 
+### D. FastAPI Service (Raw Python)
+
+Run the REST API without using the virtual environment.
+
+1. Install dependencies globally (raw Python):
+
+```powershell
+pip install -r requirements.txt
+```
+
+2. Start the server (system Python):
+
+```powershell
+py -m uvicorn src.api:app --host 127.0.0.1 --port 8000 --reload
+```
+
+If `py` is unavailable, use:
+
+```powershell
+python -m uvicorn src.api:app --host 127.0.0.1 --port 8000 --reload
+```
+
+3. Health check:
+
+```powershell
+curl http://127.0.0.1:8000/health
+```
+
+4. Generate documentation:
+
+```powershell
+$body = {
+  code_snippet = "def add(a,b): return a+b"
+  language = "Python"
+  model_name = "gpt-3.5-turbo"
+  temperature = 0.2
+  provider = "OpenAI"
+  run_hallucination_check = $true
+  run_accessibility_analysis = $true
+}
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/generate -ContentType 'application/json' -Body ($body | ConvertTo-Json)
+```
+
+Environment notes:
+- Configure `.env` with `OPENAI_API_KEY` or `BYTEZ_KEY` if using cloud providers.
+- Hugging Face and Ollama routes work without keys (local/OAI optional).
+### E. Run Tests (Raw Python)
+
+Install test dependencies and run the suite:
+
+```powershell
+pip install -r requirements.txt
+pytest -q
+```
+
+The suite covers:
+- Safety guards (src/safety.py)
+- Generator integration (src/generator.py) with network mocked
+- Evaluator metrics (src/evaluator.py) with BERTScore stubbed
+- Hallucination detection (src/analysis.py) with cloud fallback mocked
+- Accessibility analysis (src/bias_analyzer.py)
+- FastAPI endpoints (src/api.py) via TestClient
+- Streamlit module import and helper functions (src/app.py) with a stubbed streamlit
+
 ## 7\. Architecture Diagram
 
 ```mermaid
@@ -242,3 +306,18 @@ This research project relies on open-source datasets provided by the machine lea
 * **Usage:** Sourced Python function-docstring pairs to establish baseline metrics.
 * **License:** **CDLA-Permissive-v1.0** (Community Data License Agreement).
 * **Attribution:** Lu et al., "CodeXGlue: A Machine Learning Benchmark Dataset for Code Understanding and Generation," 2021.
+
+## 10. Safety Guardrails
+
+- Overview: The generator integrates centralized guardrails in [src/safety.py](src/safety.py) to reduce risk.
+- Input: Sanitizes code to mitigate prompt-injection and clamps size.
+- Output: Redacts secrets/PII and filters harmful, hateful, lewd, or violent content.
+- Controls: Clamps `temperature`, enforces per-minute rate limiting and request timeouts.
+- Logging: Writes sanitized provenance to [experiments/logs/safety.log](experiments/logs/safety.log).
+
+Environment variables (optional):
+- `SAFE_MAX_INPUT_CHARS`: Max input characters (default 8000).
+- `SAFE_RATE_LIMIT_PER_MIN`: Calls per minute (default 60).
+- `SAFE_REQUEST_TIMEOUT_SEC`: Timeout seconds for model calls (default 30).
+- `SAFE_MAX_NEW_TOKENS`: Max new tokens for completions (default 200).
+- `SAFE_TEMPERATURE_MAX`: Upper bound for `temperature` (default 0.7).
