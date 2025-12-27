@@ -12,11 +12,15 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.generator import generate_documentation
 from src.evaluator import calculate_metrics
 from src.analysis import detect_hallucination
+from src.bias_analyzer import BiasAnalyzer
 
 # --- CONFIGURATION ---
 LOG_DIR = "experiments/logs"
 RESULTS_DIR = "experiments/results"
 CHECKPOINT_FILE = os.path.join(LOG_DIR, "checkpoint_log.csv")
+
+# Initialize bias analyzer once
+bias_analyzer = BiasAnalyzer()
 
 # Ensure directories exist
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -83,7 +87,10 @@ def run_experiment_sequential(input_file, output_file, model="gpt-3.5-turbo", sa
                 # C. Detect Hallucination
                 hallucination_data = detect_hallucination(entry['code'], gen_doc)
                 
-                # D. Format Row for Rubric
+                # D. Analyze Bias/Accessibility
+                accessibility_report = bias_analyzer.generate_accessibility_report(gen_doc, entry['language'].lower())
+                
+                # E. Format Row for Rubric
                 # Columns: | Input | Model Output | Expected | Error Type | Hallucination? | Root Cause Hypothesis |
                 row = {
                     "id": entry['id'],
@@ -99,7 +106,12 @@ def run_experiment_sequential(input_file, output_file, model="gpt-3.5-turbo", sa
                     
                     # Metrics (Keep for Deliverable 3)
                     "BLEU": metrics['bleu'],
-                    "BERTScore": metrics['bert_similarity']
+                    "BERTScore": metrics['bert_similarity'],
+                    
+                    # Accessibility Metrics (NEW)
+                    "Accessibility Score": accessibility_report.overall_accessibility_score,
+                    "Grade Level": accessibility_report.grade_level_interpretation,
+                    "Flesch Reading Ease": accessibility_report.readability.flesch_reading_ease
                 }
                 
                 results.append(row)

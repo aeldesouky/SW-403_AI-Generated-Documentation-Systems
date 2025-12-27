@@ -1,5 +1,16 @@
+"""
+Hallucination Detection Module
+==============================
+
+This module provides hallucination detection for AI-generated documentation.
+Supports both local Ollama models and cloud APIs (OpenAI/Bytez) as fallback.
+
+Author: AI Documentation Systems Team
+"""
+
 import os
 from dotenv import load_dotenv
+from typing import Dict, Any
 
 load_dotenv()
 
@@ -13,14 +24,54 @@ if use_bytez:
     from bytez import Bytez
 else:
     import openai
-    # Set OpenAI key if not using Bytez
     if OPENAI_KEY:
         openai.api_key = OPENAI_KEY
 
-def detect_hallucination(source_code, generated_doc, model_name="gpt-4"):
+
+def detect_hallucination(source_code: str, generated_doc: str, 
+                         model_name: str = "gpt-4") -> Dict[str, Any]:
     """
-    Uses a strong LLM to critique the generated documentation.
-    Returns a structured dictionary: {Hallucination: bool, Error_Type: str, Reason: str}
+    Detect hallucinations in AI-generated documentation.
+    
+    Uses local Ollama models first (if available), falls back to cloud APIs.
+    
+    Args:
+        source_code: The original source code being documented.
+        generated_doc: The AI-generated documentation to verify.
+        model_name: Model to use for cloud API fallback (default: gpt-4).
+    
+    Returns:
+        Dictionary containing:
+        - has_hallucination: bool - True if hallucination detected
+        - error_type: str - Type of error (Fabricated Variable, Wrong Logic, etc.)
+        - root_cause: str - Explanation of the issue
+    """
+    # Try local Ollama models first
+    try:
+        from multi_judge import MultiJudgeHallucinationDetector
+        
+        detector = MultiJudgeHallucinationDetector(auto_pull_models=False)
+        
+        # Check if any models are available
+        if detector.get_available_roles():
+            result = detector.detect(source_code, generated_doc, parallel=False)
+            return {
+                "has_hallucination": result.final_verdict,
+                "error_type": result.error_type,
+                "root_cause": result.root_cause
+            }
+    except (ImportError, RuntimeError):
+        pass  # Fall through to cloud API
+    
+    # Fallback to cloud API (OpenAI or Bytez)
+    return _detect_with_cloud_api(source_code, generated_doc, model_name)
+
+
+def _detect_with_cloud_api(source_code: str, generated_doc: str, 
+                           model_name: str = "gpt-4") -> Dict[str, Any]:
+    """
+    Uses cloud LLM (OpenAI/Bytez) to critique the generated documentation.
+    Returns a structured dictionary: {has_hallucination: bool, error_type: str, root_cause: str}
     """
     
     judge_prompt = f"""
@@ -48,8 +99,6 @@ def detect_hallucination(source_code, generated_doc, model_name="gpt-4"):
         # --- PATH A: BYTEZ ---
         if use_bytez:
             sdk = Bytez(BYTEZ_KEY)
-            # Ensure we are asking for a specific model format expected by Bytez
-            # Assuming 'openai/gpt-4' or similar strong model is available via Bytez
             model_id = f"openai/{model_name}" 
             model = sdk.model(model_id)
             
@@ -83,13 +132,10 @@ def detect_hallucination(source_code, generated_doc, model_name="gpt-4"):
         error_type = "No Error"
         cause = "No error"
         
-        # Parse the structured response
         lines = content.split('\n')
         for line in lines:
             if "Error Type:" in line:
-                # Extract text after colon
                 error_type = line.split(":", 1)[1].strip()
-                # Fix common LLM output quirk where it writes "None" string
                 if error_type.lower() == "none": 
                     error_type = "No Error"
             if "Root Cause:" in line:
