@@ -110,14 +110,6 @@ JARGON_DICTIONARY = {
         "traceback", "debugging", "profiling", "refactoring", "polymorphism",
         "inheritance", "encapsulation", "abstraction", "instantiation"
     ],
-    "cobol": [
-        "paragraph", "section", "division", "copybook", "perform", "thru",
-        "compute", "working-storage", "linkage", "file-control", "fd",
-        "pic", "picture", "redefines", "occurs", "indexed", "sequential",
-        "vsam", "cics", "jcl", "batch", "mainframe", "ebcdic", "packed",
-        "comp", "comp-3", "binary", "display", "group", "elementary",
-        "filler", "level", "88-level", "condition-name", "copylib"
-    ],
     "general": [
         "api", "sdk", "framework", "library", "dependency", "repository",
         "commit", "branch", "merge", "pull request", "ci/cd", "pipeline",
@@ -319,7 +311,7 @@ class BiasAnalyzer:
         
         Args:
             text: The documentation text to analyze.
-            language: Programming language context (python, cobol, general).
+            language: Programming language context (python, general).
             
         Returns:
             Tuple of (list of jargon terms found, count)

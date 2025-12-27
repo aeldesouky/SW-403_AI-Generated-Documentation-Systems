@@ -98,29 +98,6 @@ Returns:
     A new sorted list containing all elements from both input lists.
 """'''
         }
-    ],
-    "cobol": [
-        {
-            "code": """       COMPUTE TOTAL-AMOUNT = QUANTITY * UNIT-PRICE.
-       IF TOTAL-AMOUNT > 1000
-           COMPUTE DISCOUNT = TOTAL-AMOUNT * 0.10
-       ELSE
-           MOVE 0 TO DISCOUNT
-       END-IF.
-       COMPUTE FINAL-AMOUNT = TOTAL-AMOUNT - DISCOUNT.""",
-            "docstring": "Calculates the total amount by multiplying quantity and unit price. Applies a 10% discount if the total exceeds 1000, otherwise no discount. Stores the result in FINAL-AMOUNT."
-        },
-        {
-            "code": """       PERFORM VARYING WS-INDEX FROM 1 BY 1 
-           UNTIL WS-INDEX > WS-TABLE-SIZE
-           IF WS-TABLE-ITEM(WS-INDEX) = WS-SEARCH-KEY
-               MOVE 'Y' TO WS-FOUND-FLAG
-               MOVE WS-INDEX TO WS-FOUND-INDEX
-               EXIT PERFORM
-           END-IF
-       END-PERFORM.""",
-            "docstring": "Performs a linear search through a table to find a matching key. Sets the found flag to 'Y' and records the index if found, then exits the loop."
-        }
     ]
 }
 
@@ -213,7 +190,7 @@ class PromptOptimizer:
         Get few-shot examples for a given language.
         
         Args:
-            language: Programming language (python, cobol, etc.)
+            language: Programming language (e.g., python)
             n_examples: Number of examples to return.
             
         Returns:

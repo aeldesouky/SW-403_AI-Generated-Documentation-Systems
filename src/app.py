@@ -1,9 +1,16 @@
 import streamlit as st
 import pandas as pd
-from generator import generate_documentation
-from evaluator import calculate_metrics
-from analysis import detect_hallucination
-from bias_analyzer import BiasAnalyzer
+# Support both package and script execution contexts
+try:
+    from src.generator import generate_documentation
+    from src.evaluator import calculate_metrics
+    from src.analysis import detect_hallucination
+    from src.bias_analyzer import BiasAnalyzer
+except Exception:
+    from generator import generate_documentation  # type: ignore
+    from evaluator import calculate_metrics  # type: ignore
+    from analysis import detect_hallucination  # type: ignore
+    from bias_analyzer import BiasAnalyzer  # type: ignore
 import time
 import os
 import json
@@ -156,7 +163,7 @@ with st.sidebar:
         model_options = list_hf_models_curated()
         model_choice = st.selectbox("Select Model", model_options)
     temp = st.slider("Temperature", 0.0, 1.0, 0.2)
-    language = st.selectbox("Language", ["Python", "COBOL"])
+    language = st.selectbox("Language", ["Python"])
 
     # Persist selection
     st.session_state['provider'] = provider_choice
