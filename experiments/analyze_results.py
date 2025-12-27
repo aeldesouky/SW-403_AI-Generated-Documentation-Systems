@@ -11,7 +11,7 @@ def print_analysis():
     df = pd.read_csv(RESULTS_FILE)
     
     print("--- 1. BASELINE METRICS & ACCURACY ---")
-    # Group by language to see Baseline (Python) vs Experiment (COBOL)
+    # Group by language
     metrics = df.groupby('language')[['BLEU', 'BERTScore']].mean()
     print(metrics)
     

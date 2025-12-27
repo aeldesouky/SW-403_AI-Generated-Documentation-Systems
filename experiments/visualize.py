@@ -10,8 +10,8 @@ def generate_simulated_data():
     np.random.seed(42)
     data = []
     
-    # Simulate 50 Python samples (High accuracy)
-    for i in range(50):
+    # Simulate 100 Python samples (High accuracy)
+    for i in range(100):
         bert_score = np.random.normal(0.88, 0.05)
         data.append({
             "language": "Python",
@@ -22,20 +22,6 @@ def generate_simulated_data():
             "confidence_score": bert_score + np.random.normal(0, 0.03)
         })
         
-    # Simulate 50 COBOL samples (Lower accuracy, higher hallucinations)
-    for i in range(50):
-        bert_score = np.random.normal(0.69, 0.1)
-        data.append({
-            "language": "COBOL",
-            "bert_sim": bert_score,
-            "error_type": np.random.choice(
-                ["No Error", "Fabricated Logic", "Omission", "Hallucinated Var"], 
-                p=[0.72, 0.10, 0.10, 0.08]
-            ),
-            "complexity": np.random.choice(["Low", "Medium", "High"], p=[0.2, 0.4, 0.4]),
-            "doc_length": int(np.random.normal(180, 40)),
-            "confidence_score": bert_score + np.random.normal(0, 0.05)
-        })
     return pd.DataFrame(data)
 
 def plot_results():
@@ -47,18 +33,15 @@ def plot_results():
     
     # 1. Semantic Similarity Distribution with Statistical Annotations
     plt.subplot(2, 3, 1)
-    parts = plt.violinplot([df[df['language']=='Python']['bert_sim'], 
-                            df[df['language']=='COBOL']['bert_sim']], 
-                           positions=[0, 1], showmeans=True, showmedians=True)
-    plt.xticks([0, 1], ['Python', 'COBOL'])
+    parts = plt.violinplot([df[df['language']=='Python']['bert_sim']], 
+                           positions=[0], showmeans=True, showmedians=True)
+    plt.xticks([0], ['Python'])
     plt.ylabel('BERTScore (Similarity)', fontsize=11)
     plt.title('Semantic Accuracy Distribution\n(Violin Plot)', fontsize=12, fontweight='bold')
     
-    # Add statistical test
+    # Add statistical summary
     python_scores = df[df['language']=='Python']['bert_sim']
-    cobol_scores = df[df['language']=='COBOL']['bert_sim']
-    t_stat, p_value = stats.ttest_ind(python_scores, cobol_scores)
-    plt.text(0.5, 0.95, f'p-value: {p_value:.2e}', transform=plt.gca().transAxes, 
+    plt.text(0.5, 0.95, f'Mean: {python_scores.mean():.3f}', transform=plt.gca().transAxes, 
              ha='center', fontsize=9, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
     
     # 2. Error Rate Comparison (Percentage)
@@ -90,28 +73,25 @@ def plot_results():
     plt.subplot(2, 3, 4)
     complexity_order = {"Low": 0, "Medium": 1, "High": 2}
     df['complexity_num'] = df['complexity'].map(complexity_order)
-    for lang in ['Python', 'COBOL']:
-        lang_data = df[df['language'] == lang]
-        plt.scatter(lang_data['complexity_num'], lang_data['bert_sim'], 
-                   label=lang, alpha=0.6, s=50)
+    lang_data = df[df['language'] == 'Python']
+    plt.scatter(lang_data['complexity_num'], lang_data['bert_sim'], 
+               label='Python', alpha=0.6, s=50)
     plt.xticks([0, 1, 2], ['Low', 'Medium', 'High'])
     plt.xlabel('Code Complexity', fontsize=11)
     plt.ylabel('BERTScore', fontsize=11)
     plt.title('Accuracy vs Code Complexity', fontsize=12, fontweight='bold')
     plt.legend()
     
-    # Add trend lines
-    for lang, color in [('Python', 'blue'), ('COBOL', 'red')]:
-        lang_data = df[df['language'] == lang]
-        z = np.polyfit(lang_data['complexity_num'], lang_data['bert_sim'], 1)
-        p = np.poly1d(z)
-        plt.plot([0, 1, 2], p([0, 1, 2]), color=color, linestyle='--', alpha=0.3, linewidth=2)
+    # Add trend line
+    lang_data = df[df['language'] == 'Python']
+    z = np.polyfit(lang_data['complexity_num'], lang_data['bert_sim'], 1)
+    p = np.poly1d(z)
+    plt.plot([0, 1, 2], p([0, 1, 2]), color='blue', linestyle='--', alpha=0.3, linewidth=2)
     
     # 5. Documentation Length Distribution
     plt.subplot(2, 3, 5)
-    plt.hist([df[df['language']=='Python']['doc_length'], 
-              df[df['language']=='COBOL']['doc_length']], 
-             label=['Python', 'COBOL'], bins=15, alpha=0.7, color=['#3498db', '#e67e22'])
+    plt.hist([df[df['language']=='Python']['doc_length']], 
+             label=['Python'], bins=15, alpha=0.7, color=['#3498db'])
     plt.xlabel('Documentation Length (words)', fontsize=11)
     plt.ylabel('Frequency', fontsize=11)
     plt.title('Generated Documentation Length', fontsize=12, fontweight='bold')
@@ -119,10 +99,9 @@ def plot_results():
     
     # 6. Confidence vs Actual Accuracy
     plt.subplot(2, 3, 6)
-    for lang, marker in [('Python', 'o'), ('COBOL', 's')]:
-        lang_data = df[df['language'] == lang]
-        plt.scatter(lang_data['confidence_score'], lang_data['bert_sim'], 
-                   label=lang, alpha=0.5, s=40, marker=marker)
+    lang_data = df[df['language'] == 'Python']
+    plt.scatter(lang_data['confidence_score'], lang_data['bert_sim'], 
+               label='Python', alpha=0.5, s=40, marker='o')
     plt.plot([0.6, 1.0], [0.6, 1.0], 'k--', alpha=0.3, label='Perfect Calibration')
     plt.xlabel('Model Confidence Score', fontsize=11)
     plt.ylabel('Actual BERTScore', fontsize=11)
@@ -160,12 +139,11 @@ def generate_detailed_error_analysis(df):
     axes[0].set_xlabel('Code Complexity', fontsize=11)
     
     # Accuracy score distribution with KDE
-    for lang in ['Python', 'COBOL']:
-        lang_data = df[df['language'] == lang]['bert_sim']
-        axes[1].hist(lang_data, bins=20, alpha=0.5, label=f'{lang} (μ={lang_data.mean():.3f})', density=True)
-        kde = gaussian_kde(lang_data)
-        x_range = np.linspace(lang_data.min(), lang_data.max(), 100)
-        axes[1].plot(x_range, kde(x_range), linewidth=2)
+    lang_data = df[df['language'] == 'Python']['bert_sim']
+    axes[1].hist(lang_data, bins=20, alpha=0.5, label=f'Python (μ={lang_data.mean():.3f})', density=True)
+    kde = gaussian_kde(lang_data)
+    x_range = np.linspace(lang_data.min(), lang_data.max(), 100)
+    axes[1].plot(x_range, kde(x_range), linewidth=2)
     
     axes[1].set_title('Accuracy Distribution with KDE', fontsize=13, fontweight='bold')
     axes[1].set_xlabel('BERTScore', fontsize=11)
@@ -184,29 +162,14 @@ def generate_statistical_summary(df):
     ax.axis('off')
     
     summary_data = []
-    for lang in ['Python', 'COBOL']:
-        lang_data = df[df['language'] == lang]
-        summary_data.append([
-            lang,
-            f"{lang_data['bert_sim'].mean():.4f}",
-            f"{lang_data['bert_sim'].std():.4f}",
-            f"{lang_data['bert_sim'].median():.4f}",
-            f"{(lang_data['error_type'] != 'No Error').sum() / len(lang_data) * 100:.1f}%",
-            f"{len(lang_data)}"
-        ])
-    
-    # Add difference row
-    python_mean = df[df['language']=='Python']['bert_sim'].mean()
-    cobol_mean = df[df['language']=='COBOL']['bert_sim'].mean()
-    diff = python_mean - cobol_mean
-    
+    lang_data = df[df['language'] == 'Python']
     summary_data.append([
-        'Δ (Python - COBOL)',
-        f"{diff:.4f} ({diff/cobol_mean*100:.1f}%)",
-        '-',
-        '-',
-        '-',
-        '-'
+        'Python',
+        f"{lang_data['bert_sim'].mean():.4f}",
+        f"{lang_data['bert_sim'].std():.4f}",
+        f"{lang_data['bert_sim'].median():.4f}",
+        f"{(lang_data['error_type'] != 'No Error').sum() / len(lang_data) * 100:.1f}%",
+        f"{len(lang_data)}"
     ])
     
     table = ax.table(cellText=summary_data,
