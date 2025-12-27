@@ -128,7 +128,6 @@ class SecurityScanner:
             # Map language names
             lang_map = {
                 'python': 'py',
-                'cobol': 'cobol',
                 'java': 'java',
                 'javascript': 'js',
                 'typescript': 'ts'
